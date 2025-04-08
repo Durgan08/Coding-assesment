@@ -1,0 +1,112 @@
+using System;
+
+class Mastermind
+{
+    static void Main()
+    {
+        // Generate a random 4-digit secret code with digits from 1 to 6
+        Random rand = new Random();
+        int[] secretCode = new int[4];
+        for (int i = 0; i < 4; i++)
+        {
+            secretCode[i] = rand.Next(1, 7); // Random number between 1 and 6
+        }
+
+        int attempts = 10;
+        bool gameWon = false;
+
+        Console.WriteLine("Welcome to Mastermind!");
+        Console.WriteLine("Guess the 4-digit code. Each digit is between 1 and 6.");
+        Console.WriteLine("You have 10 attempts. Good luck!");
+
+        while (attempts > 0)
+        {
+            Console.WriteLine($"\nAttempts remaining: {attempts}");
+            Console.Write("Enter your guess (4 digits, each between 1 and 6): ");
+            string userInput = Console.ReadLine();
+
+            // Validate input (must be 4 digits, each between 1 and 6)
+            if (userInput.Length != 4 || !IsValidGuess(userInput))
+            {
+                Console.WriteLine("Invalid input! Please enter exactly 4 digits, each between 1 and 6.");
+                continue;
+            }
+
+            // Convert input string to integer array (guess)
+            int[] guess = Array.ConvertAll(userInput.ToCharArray(), c => c - '0');
+            
+            // Make copies of the secret code and guess for comparison
+            int[] secretCodeCopy = (int[])secretCode.Clone();
+            int[] guessCopy = (int[])guess.Clone();
+            
+            // Get feedback based on guess
+            string feedback = GetFeedback(secretCodeCopy, guessCopy);
+            Console.WriteLine("Feedback: " + feedback);
+
+            // Check if the guess is correct
+            if (feedback == "++++")
+            {
+                Console.WriteLine("Congratulations! You guessed the code correctly!");
+                gameWon = true;
+                break;
+            }
+
+            attempts--;
+        }
+
+        if (!gameWon)
+        {
+            Console.WriteLine("Sorry, you've run out of attempts! The secret code was: " + string.Join("", secretCode));
+        }
+    }
+
+    // Validate if all characters are digits between 1 and 6
+    static bool IsValidGuess(string input)
+    {
+        foreach (char c in input)
+        {
+            if (c < '1' || c > '6')
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Generate feedback based on the guess and secret code
+    static string GetFeedback(int[] secretCode, int[] guess)
+    {
+        char[] feedback = new char[4];
+        
+        // First pass: check for exact matches (correct digit, correct position)
+        for (int i = 0; i < 4; i++)
+        {
+            if (guess[i] == secretCode[i])
+            {
+                feedback[i] = '+'; // Correct digit, correct position
+                secretCode[i] = -1; // Mark this position as used
+                guess[i] = -1; // Mark this position as used in guess
+            }
+        }
+
+        // Second pass: check for partial matches (correct digit, wrong position)
+        for (int i = 0; i < 4; i++)
+        {
+            if (guess[i] != -1) // Only consider positions that were not already matched
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if (guess[i] == secretCode[j])
+                    {
+                        feedback[i] = '-'; // Correct digit, wrong position
+                        secretCode[j] = -1; // Mark this position as used
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Return the feedback string with '+' signs first, then '-' signs.
+        return new string(feedback);
+    }
+}
